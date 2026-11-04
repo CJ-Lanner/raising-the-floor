@@ -1,0 +1,44 @@
+{
+  "title": "claims_tidy_reply",
+  "description": "The tidy-up of one task's store of verified claims. Every input row appears exactly once: as a kept row's row_id, or in a kept row's merged_from.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["rows", "conflicts"],
+  "properties": {
+    "rows": {
+      "type": "array",
+      "description": "One entry per kept row.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["row_id", "merged_from", "shared_words", "claim", "note", "quote_contradicts_reply", "verdict", "reason", "covers_only", "does_not_cover"],
+        "properties": {
+          "row_id": {"type": "string", "description": "The id of the input row that is kept."},
+          "merged_from": {"type": "array", "items": {"type": "string"}, "description": "Ids of input rows recording the same fact, merged into this one; empty when none."},
+          "shared_words": {"type": "string", "description": "The value (a number, name, or yes/no phrase) that appears in this row's quote and in every merged row's quote, copied exactly; empty when merged_from is empty."},
+          "claim": {"type": "string", "description": "The fact this row's quote shows, in one plain sentence."},
+          "note": {"type": "string", "description": "For a finding row: what the reply said. Empty for a right row."},
+          "quote_contradicts_reply": {"type": "string", "enum": ["yes", "no", ""], "description": "For a finding row: yes when the quote shows the reply's fact was false; no when the grader faulted the source or the way the reply answered. Empty for other rows."},
+          "verdict": {"type": "string", "enum": ["right", "wrong", "could not verify", "disputed"], "description": "The row's verdict. Keep the input verdict; the only allowed change is to disputed, with a reason."},
+          "reason": {"type": "string", "description": "Why you merged rows, stated only part of a claim, or changed the verdict, in one plain sentence; empty otherwise."},
+          "covers_only": {"type": "string", "description": "One sentence naming the item (with model or part number), the property, the source page, and the date read, exactly as the quote supports and no wider."},
+          "does_not_cover": {"type": "string", "description": "Two or three nearby things a grader might wrongly stretch this fact to (other retailers, other configurations, other dates, whether the source's other claims are true)."}
+        }
+      }
+    },
+    "conflicts": {
+      "type": "array",
+      "description": "Kept rows whose quotes give different values for the same property of the same item at the same time.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["row_ids", "values", "why"],
+        "properties": {
+          "row_ids": {"type": "array", "items": {"type": "string"}, "minItems": 2},
+          "values": {"type": "array", "items": {"type": "string"}, "minItems": 2, "description": "Each row's differing value, copied from that row's own quote, in the order of row_ids."},
+          "why": {"type": "string", "description": "What the rows disagree about, and how the answer changes a grade, in one plain sentence."}
+        }
+      }
+    }
+  }
+}

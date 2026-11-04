@@ -1,0 +1,1 @@
+The user replied: [persona message]. Brief so far: [brief]. Update the brief with anything new the user said. If the reply shows the answer broke one of their facts or left out part of what they asked for, fix the answer using your notes; search again only if the notes cannot cover it. Do not restart. Reply to the user with the revised answer, sources shown as before.

@@ -1,0 +1,1 @@
+Notes: [notes]. List the claims in these notes that, if wrong, would change the answer. For each, search once for evidence that it is wrong or out of date, checking the current rule, price, or status where it applies. Report each as confirmed, corrected (with the correction and source), or uncertain. Do not add new topics.

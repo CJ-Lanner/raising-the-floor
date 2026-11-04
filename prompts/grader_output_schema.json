@@ -1,0 +1,617 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "grader_reply",
+  "description": "One graded reply, per rubric.md and prompts/grader_instructions.md. The grader grades every field: is_answer, every must-have check (transcript checks included), A (does the job), B (stated facts respected), C (a serious accuracy error), D (a serious sourcing error), the claims it checked, the failure-mode codes, the veto, method failure, and the source mix. Each of A, B, C, D carries a one-sentence reason written before its verdict. The script adds the pass rule, the share of checked claims right, the sourcing trigger, and grading_version; the grader never computes them.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "is_answer",
+    "checks",
+    "A",
+    "B",
+    "C",
+    "D",
+    "claims_checked",
+    "failure_modes",
+    "veto",
+    "method_failure",
+    "source_mix"
+  ],
+  "properties": {
+    "is_answer": {
+      "type": "boolean",
+      "description": "rubric.md section 4a: does the reply commit to the deliverable (the pick, the fact, the list, or the account asked for)? false when it says it needs something from the user first, or only says what it will do next. On false: checks and claims_checked are empty lists, and every verdict and serious_error below is null."
+    },
+    "checks": {
+      "type": "array",
+      "description": "One entry per must-have check in the task record, every kind: transcript, fixed fact, and depends on the answer.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "n",
+          "kind",
+          "verdict",
+          "basis",
+          "reason",
+          "reply_quote",
+          "where_in_source",
+          "lookups",
+          "key_challenged",
+          "issue"
+        ],
+        "properties": {
+          "n": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "transcript",
+              "fixed fact",
+              "depends on the answer"
+            ]
+          },
+          "verdict": {
+            "type": "string",
+            "enum": [
+              "pass",
+              "fail"
+            ]
+          },
+          "basis": {
+            "type": "string",
+            "enum": [
+              "transcript",
+              "key",
+              "lookup"
+            ],
+            "description": "transcript: graded from the conversation alone (a transcript check). key: graded against the dated answer key (a fixed-fact check). lookup: graded from a logged lookup (a depends-on-the-answer check)."
+          },
+          "reason": {
+            "type": "string"
+          },
+          "reply_quote": {
+            "type": "string",
+            "description": "The reply's own sentence this check is about, quoted word for word. Required whenever verdict is 'fail'; may be empty on a pass."
+          },
+          "where_in_source": {
+            "type": "string",
+            "description": "Where in the answer key or the looked-up source the deciding line sits (section heading, page number, or table and row); for a transcript check, 'the conversation'. Required whenever verdict is 'fail'; may be empty on a pass."
+          },
+          "lookups": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/lookup"
+            }
+          },
+          "key_challenged": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/$defs/key_challenge"
+              }
+            ]
+          },
+          "issue": {
+            "$ref": "#/$defs/issue"
+          }
+        }
+      }
+    },
+    "A": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "A, does the job (rubric.md section 2).",
+      "required": [
+        "reason",
+        "verdict"
+      ],
+      "properties": {
+        "reason": {
+          "type": "string",
+          "description": "One sentence, written before the verdict."
+        },
+        "verdict": {
+          "$ref": "#/$defs/yes_no_or_null"
+        }
+      }
+    },
+    "B": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "B, stated facts respected (rubric.md section 2).",
+      "required": [
+        "reason",
+        "verdict",
+        "fact_ignored",
+        "dropped_secondary_facts"
+      ],
+      "properties": {
+        "reason": {
+          "type": "string",
+          "description": "One sentence, written before the verdict."
+        },
+        "verdict": {
+          "$ref": "#/$defs/yes_no_or_null"
+        },
+        "fact_ignored": {
+          "type": "string",
+          "description": "When verdict is 'no': the stated fact the reply ignored or contradicted, in the user's own words. An empty string otherwise."
+        },
+        "dropped_secondary_facts": {
+          "type": "array",
+          "description": "Secondary stated facts (a 'would be nice') the reply dropped, each in the user's own words. Logged and counted; they cost nothing.",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "C": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "C, accurate: is there a serious accuracy error (rubric.md section 2)?",
+      "required": [
+        "reason",
+        "serious_error",
+        "reply_sentence",
+        "address",
+        "quote",
+        "where_in_source",
+        "issue"
+      ],
+      "properties": {
+        "reason": {
+          "type": "string",
+          "description": "One sentence, written before the verdict: whether an error is serious and why, in terms of what this user would do differently."
+        },
+        "serious_error": {
+          "$ref": "#/$defs/yes_no_or_null"
+        },
+        "reply_sentence": {
+          "type": "string",
+          "description": "When serious_error is 'yes': the reply's own sentence, quoted word for word. An empty string otherwise."
+        },
+        "address": {
+          "type": "string",
+          "description": "When serious_error is 'yes': the address of the source that shows the sentence wrong. An empty string otherwise."
+        },
+        "quote": {
+          "type": "string",
+          "description": "When serious_error is 'yes': the source's line, quoted word for word. An empty string otherwise."
+        },
+        "where_in_source": {
+          "type": "string",
+          "description": "When serious_error is 'yes': where in the source the line sits. An empty string otherwise."
+        },
+        "issue": {
+          "$ref": "#/$defs/issue"
+        }
+      }
+    },
+    "D": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "D, appropriately sourced: is there a serious sourcing error (rubric.md section 2)? The case where the pick rests on an unflagged interested source and the user asked for independent sources is worked out by the script from the two fields below it.",
+      "required": [
+        "reason",
+        "serious_error",
+        "reply_sentence",
+        "address",
+        "quote",
+        "where_in_source",
+        "issue",
+        "pick_rests_on_unflagged_interested_source",
+        "interested_source_address",
+        "user_asked_for_independent_sources",
+        "user_quote",
+        "minor_sourcing_findings"
+      ],
+      "properties": {
+        "reason": {
+          "type": "string",
+          "description": "One sentence, written before the verdict."
+        },
+        "serious_error": {
+          "$ref": "#/$defs/yes_no_or_null"
+        },
+        "reply_sentence": {
+          "type": "string",
+          "description": "When serious_error is 'yes': the reply's own sentence whose pick, conclusion, or step rests on the unsupporting source or on no source, quoted word for word. An empty string otherwise."
+        },
+        "address": {
+          "type": "string",
+          "description": "When serious_error is 'yes': the address of the source the sentence rests on; an empty string when the fault is that it rests on no source."
+        },
+        "quote": {
+          "type": "string",
+          "description": "When serious_error is 'yes' and there is a source: its line, quoted word for word. An empty string otherwise."
+        },
+        "where_in_source": {
+          "type": "string",
+          "description": "When serious_error is 'yes' and there is a source: where the line sits. An empty string otherwise."
+        },
+        "issue": {
+          "$ref": "#/$defs/issue"
+        },
+        "pick_rests_on_unflagged_interested_source": {
+          "$ref": "#/$defs/yes_no_or_null"
+        },
+        "interested_source_address": {
+          "type": "string",
+          "description": "When pick_rests_on_unflagged_interested_source is 'yes': that source's address. An empty string otherwise."
+        },
+        "user_asked_for_independent_sources": {
+          "$ref": "#/$defs/yes_no_or_null"
+        },
+        "user_quote": {
+          "type": "string",
+          "description": "When user_asked_for_independent_sources is 'yes': the user's own line that asks, quoted word for word. An empty string otherwise."
+        },
+        "minor_sourcing_findings": {
+          "type": "array",
+          "description": "Minor sourcing findings, logged and costing nothing: thin sources or the wrong kind, copies of one story counted as several, an unflagged interested source the pick does not rest on.",
+          "items": {
+            "$ref": "#/$defs/finding"
+          }
+        }
+      }
+    },
+    "claims_checked": {
+      "type": "array",
+      "description": "The claims that carry the answer, at most five, each opened and checked, or marked not checked.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "claim",
+          "address",
+          "quote",
+          "reply_quote",
+          "where_in_source",
+          "result",
+          "severity",
+          "reason",
+          "issue",
+          "read",
+          "store_row",
+          "store_result",
+          "condition"
+        ],
+        "properties": {
+          "claim": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "quote": {
+            "type": "string",
+            "description": "The source's line, quoted word for word."
+          },
+          "reply_quote": {
+            "type": "string",
+            "description": "The reply's own sentence making this claim, quoted word for word. Required when result is 'incorrect'; may be empty otherwise."
+          },
+          "where_in_source": {
+            "type": "string",
+            "description": "Where in the source the quoted line sits. Required for every claim whose result is 'correct' or 'incorrect'; may be empty only when the result is 'not checked'."
+          },
+          "result": {
+            "type": "string",
+            "enum": [
+              "correct",
+              "incorrect",
+              "not checked"
+            ]
+          },
+          "severity": {
+            "description": "right (result correct), minor (result incorrect, not serious), or serious (result incorrect, and it is C's or D's serious error: the reply_quote is the same sentence). null only when the result is 'not checked'.",
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "right",
+                  "minor",
+                  "serious"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "description": "One sentence: why this claim is right, wrong, or was not checked."
+          },
+          "issue": {
+            "$ref": "#/$defs/issue"
+          },
+          "read": {
+            "type": "string",
+            "enum": [
+              "full",
+              "part"
+            ],
+            "description": "How much of the source you read for this claim: 'full' when you read the whole page or document, 'part' when you read only a section, a snippet, an abstract, or a search result."
+          },
+          "store_row": {
+            "description": "The row id of the fact block you used for this claim, or \"none\" when you used no block (null is read the same way).",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "store_result": {
+            "description": "null when store_row is \"none\" or null. Otherwise: 'reused', 'upgraded to full', or 'store challenged'.",
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "reused",
+                  "upgraded to full",
+                  "store challenged"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "condition": {
+            "type": "string",
+            "description": "Any condition on the page that limits the claim, in one plain phrase; an empty string when there is none."
+          }
+        }
+      }
+    },
+    "failure_modes": {
+      "type": "array",
+      "description": "Zero or more fixed failure-mode codes. Never 'cap' -- the script adds that one.",
+      "items": {
+        "type": "string",
+        "enum": [
+          "constraint-price",
+          "constraint-other",
+          "never-asked",
+          "stale-rule",
+          "invented",
+          "misattributed",
+          "no-sources",
+          "citation-unsupported",
+          "one-sided",
+          "wrong-deliverable"
+        ]
+      }
+    },
+    "veto": {
+      "description": "rubric.md section 3, 'The veto': null, or a finding marking the reply not acceptable because it would leave the user objectively worse off in a way no check and no dimension names. Expected to be rare; never for a fault a dimension already covers.",
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "reason",
+            "reply_quote",
+            "address",
+            "source_quote",
+            "where_in_source",
+            "issue"
+          ],
+          "properties": {
+            "reason": {
+              "type": "string"
+            },
+            "reply_quote": {
+              "type": "string"
+            },
+            "address": {
+              "type": "string"
+            },
+            "source_quote": {
+              "type": "string"
+            },
+            "where_in_source": {
+              "type": "string"
+            },
+            "issue": {
+              "$ref": "#/$defs/issue"
+            }
+          }
+        }
+      ]
+    },
+    "method_failure": {
+      "description": "rubric.md section 3, 'Method failure, defined so it can be checked': null, or the better source the reply's method skipped. An address is required; with no address record null.",
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "better_source",
+            "address",
+            "source_quote",
+            "where_in_source",
+            "reason",
+            "reply_quote",
+            "issue"
+          ],
+          "properties": {
+            "better_source": {
+              "type": "string"
+            },
+            "address": {
+              "type": "string"
+            },
+            "source_quote": {
+              "type": "string"
+            },
+            "where_in_source": {
+              "type": "string"
+            },
+            "reason": {
+              "type": "string"
+            },
+            "reply_quote": {
+              "type": "string"
+            },
+            "issue": {
+              "$ref": "#/$defs/issue"
+            }
+          }
+        }
+      ]
+    },
+    "source_mix": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "rubric.md section 4a, 'Source mix': how many of the sources the reply cites are of each kind. Logged only. All zeros when the reply cites nothing or is not an answer.",
+      "required": [
+        "official_or_primary",
+        "independent",
+        "interested"
+      ],
+      "properties": {
+        "official_or_primary": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "independent": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "interested": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  },
+  "$defs": {
+    "yes_no_or_null": {
+      "description": "'yes' or 'no' on an answer; null on a reply that is not an answer.",
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "yes",
+            "no"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "issue": {
+      "description": "A short plain phrase naming the underlying problem this finding comes from. Reuse the exact same phrase for every finding in the conversation that comes from the same problem (the prompt lists the phrases already used). null when this entry is not a finding.",
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reply_quote",
+        "address",
+        "source_quote",
+        "where_in_source",
+        "reason",
+        "issue"
+      ],
+      "properties": {
+        "reply_quote": {
+          "type": "string",
+          "description": "The reply's own sentence, quoted word for word."
+        },
+        "address": {
+          "type": "string"
+        },
+        "source_quote": {
+          "type": "string",
+          "description": "The source's line, quoted word for word."
+        },
+        "where_in_source": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string",
+          "description": "One sentence: what the fault is."
+        },
+        "issue": {
+          "$ref": "#/$defs/issue"
+        }
+      }
+    },
+    "lookup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "address",
+        "quote",
+        "date",
+        "result"
+      ],
+      "properties": {
+        "address": {
+          "type": "string"
+        },
+        "quote": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string"
+        },
+        "result": {
+          "type": "string",
+          "enum": [
+            "supported",
+            "not supported",
+            "could not open"
+          ]
+        }
+      }
+    },
+    "key_challenge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "address",
+        "quote",
+        "why"
+      ],
+      "properties": {
+        "address": {
+          "type": "string"
+        },
+        "quote": {
+          "type": "string"
+        },
+        "why": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
