@@ -1,6 +1,6 @@
 # Raising the Floor on AI Answers: the study files
 
-This repository holds the questions, checklists, simulated users, prompts, results and quoted conversations behind the Medium article "[Raising the Floor on AI Answers](ARTICLE-LINK)".
+This repository holds the questions, checklists, simulated users, prompts, results and quoted conversations behind the Medium article "[Raising the Floor on AI Answers](https://medium.com/@cjlanner/raising-the-floor-on-ai-answers-be2ea38b11bb)".
 
 ## What the study tested
 
